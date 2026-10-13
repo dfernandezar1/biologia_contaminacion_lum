@@ -1,0 +1,561 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ecosistemas bajo luz artificial</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna de escenas nocturnas; cada escena = pintura animada a la izquierda, lectura a la derecha. El ámbar de la lámpara es lo único que grita. */
+:root{
+  --night:#080e1d; --night-2:#0e1730; --panel:#111c38; --line:#243459;
+  --ink:#e9effd; --muted:#a2b2d2; --lamp:#ffb938; --lamp-soft:#ffd98a; --moon:#b9ccff;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--night);color:var(--ink);font:400 16px/1.6 var(--font-body);padding-inline:clamp(16px,4vw,40px);padding-block:32px 64px}
+h1,h2{font-family:var(--font-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-weight:800;font-size:clamp(34px,6.4vw,68px);line-height:1}
+h2{font-weight:800;font-size:clamp(28px,4.4vw,44px);line-height:1.05}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:3px}
+
+.hero{max-width:1180px;margin:0 auto;display:grid;gap:20px;padding-bottom:32px}
+.hero p{max-width:60ch;color:var(--muted);font-size:18px}
+.hero-row{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center}
+.label{font:500 12px/1.4 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--lamp-soft)}
+.jump{display:flex;flex-wrap:wrap;gap:8px}
+.jump a{border:1px solid var(--line);border-radius:999px;padding:6px 14px;text-decoration:none;font-size:14px;background:var(--night-2)}
+.jump a:hover{border-color:var(--lamp)}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--night-2)}
+.seg button,.chip{font:500 14px/1 var(--font-body);color:var(--muted);background:transparent;border:0;border-radius:999px;padding:10px 16px;cursor:pointer;transition:background .3s,color .3s}
+.seg button[data-set="true"][aria-pressed="true"]{background:var(--lamp);color:#1d1300}
+.seg button[data-set="false"][aria-pressed="true"]{background:var(--moon);color:#0a1226}
+.chip{border:1px solid var(--line);background:var(--night-2)}
+.chip[aria-pressed="true"]{background:#c9d3ea;color:#0a1226}
+
+.scene{max-width:1180px;margin:0 auto;padding-block:48px 16px;border-top:1px solid var(--line);scroll-margin-top:8px;display:grid;gap:18px}
+.scene-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+.lead{max-width:64ch;color:var(--muted)}
+.stage{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.stage{grid-template-columns:minmax(0,1fr)}}
+.viz,.info{display:grid;gap:14px;min-width:0}
+.scene-svg{width:100%;height:auto;display:block;border-radius:6px;border:1px solid var(--line);background:#050a18}
+.toggle{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.caption{font-size:15px;min-height:3.4em}
+.scene[data-lit="true"] .c-dark,.scene[data-lit="false"] .c-lit,.c-fog{display:none}
+.scene[data-fog="true"][data-lit="true"] .c-lit{display:none}
+.scene[data-fog="true"][data-lit="true"] .c-fog{display:inline}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:14px}
+.meter{display:grid;gap:6px}
+.m-top{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.m-val{font:500 12px/1.6 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.bar{height:8px;border-radius:99px;background:#1c294b;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;transition:width .9s ease,background .6s}
+.scene[data-lit="true"] .bar i{background:var(--lamp)}
+.scene[data-lit="false"] .bar i{background:var(--moon)}
+.points{margin:0;padding-left:1.1em;display:grid;gap:8px;color:var(--ink);font-size:15px}
+.points li::marker{color:var(--lamp)}
+.hours{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+.hours i{height:22px;border-radius:3px;background:#2a4a8a;transition:background .6s}
+.hours i.on{background:var(--lamp)}
+.hours-scale{display:flex;justify-content:space-between;font:400 11px/1 var(--font-mono);color:var(--muted)}
+.note{max-width:1180px;margin:40px auto 0;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+
+/* ---------- escena SVG ---------- */
+.only-lit,.only-dark{transition:opacity .7s ease}
+.scene[data-lit="true"] .only-dark,.scene[data-lit="false"] .only-lit{opacity:0}
+.stars{transition:opacity .8s}.moon{transition:opacity .8s}
+.scene[data-lit="true"] .stars{opacity:.2}.scene[data-lit="true"] .moon,.scene[data-lit="true"] .moonglow{opacity:.55}
+.star{animation:tw 3.4s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.3}50%{opacity:1}}
+.bulb{fill:#47547a;transition:fill .6s}
+.scene[data-lit="true"] .bulb{fill:#ffe3a0}
+.glow{transform-box:fill-box;transform-origin:center;animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.06)}}
+
+.spin{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:spin var(--d,6s) linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hover{animation:hover var(--t,8s) ease-in-out infinite}
+@keyframes hover{0%,100%{transform:translate(0,0)}25%{transform:translate(14px,-10px)}50%{transform:translate(-8px,-18px)}75%{transform:translate(-16px,-4px)}}
+
+.moth .wing path{fill:#d9c9a5}.moth ellipse{fill:#f1e6cc}
+.moth .wing{animation:flapX .14s ease-in-out infinite alternate;transform-box:fill-box}
+.moth .wl{transform-origin:100% 50%}.moth .wr{transform-origin:0 50%}
+@keyframes flapX{from{transform:scaleX(1)}to{transform:scaleX(.3)}}
+.bat path,.bat ellipse,.bat circle{fill:#8394c2}.bat.tol path,.bat.tol ellipse,.bat.tol circle{fill:#d7b078}
+.bird path,.bird ellipse{fill:#c9d6f5}
+.bat .wing,.bird .wing{animation:flapY .24s ease-in-out infinite alternate;transform-box:fill-box}
+.bat .wl{transform-origin:100% 40%}.bat .wr{transform-origin:0 40%}
+.bird .wl{transform-origin:100% 100%}.bird .wr{transform-origin:0 100%}
+@keyframes flapY{from{transform:scaleY(1)}to{transform:scaleY(.4)}}
+.turtle path,.turtle circle{fill:#b7c29a}.turtle ellipse{fill:#8f9c74}
+.turtle .fl{animation:padL .5s ease-in-out infinite alternate;transform-box:fill-box}
+.turtle .fl-r{animation-name:padR;transform-origin:0 50%}.turtle .fl-l{transform-origin:100% 50%}
+@keyframes padL{to{transform:rotate(-18deg)}}@keyframes padR{to{transform:rotate(18deg)}}
+.fem .fl{animation-duration:1.3s}
+
+.swoop{animation:swoop 9s linear 1s infinite}
+@keyframes swoop{0%{transform:translate(-50px,0)}30%{transform:translate(190px,32px)}60%{transform:translate(400px,6px)}100%{transform:translate(680px,-14px)}}
+.flow{fill:none;stroke:var(--moon);stroke-width:2;stroke-linecap:round;stroke-dasharray:2 8;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-20}}
+.flightS{animation:flyAcross 10s ease-in-out infinite}
+@keyframes flyAcross{0%{transform:translate(0,0);opacity:0}6%{opacity:1}25%{transform:translate(110px,-20px)}50%{transform:translate(250px,-18px)}75%{transform:translate(340px,-5px)}90%{transform:translate(410px,12px);opacity:1}100%{transform:translate(410px,12px);opacity:0}}
+.scene[data-lit="true"] .flightS{animation-name:flyBack}
+@keyframes flyBack{0%{transform:translate(0,0);opacity:0}6%{opacity:1}40%{transform:translate(135px,-18px)}48%{transform:translate(128px,-30px)}70%{transform:translate(40px,-6px)}92%{transform:translate(0,0);opacity:1}100%{transform:translate(0,0);opacity:0}}
+.scurry{animation:scurry 8s ease-in-out infinite}
+@keyframes scurry{0%{transform:translate(0,0) scaleX(1)}45%{transform:translate(70px,0) scaleX(1)}50%{transform:translate(70px,0) scaleX(-1)}95%{transform:translate(0,0) scaleX(-1)}100%{transform:translate(0,0) scaleX(1)}}
+
+.hat{animation:toSea 7s ease-in-out infinite;animation-delay:var(--delay,0s)}
+.scene[data-lit="true"] .hat{animation-name:toRoad}
+@keyframes toSea{0%{transform:translate(0,0) rotate(-90deg);opacity:0}8%{opacity:1}50%{transform:translate(-95px,calc(var(--dy)*.5)) rotate(-100deg)}88%{opacity:1}100%{transform:translate(-190px,var(--dy)) rotate(-90deg);opacity:0}}
+@keyframes toRoad{0%{transform:translate(0,0) rotate(90deg);opacity:0}8%{opacity:1}50%{transform:translate(75px,calc(var(--dy)*.5)) rotate(80deg)}88%{opacity:1}100%{transform:translate(150px,var(--dy)) rotate(90deg);opacity:0}}
+.fem{animation:femDark 12s ease-in-out infinite}
+.scene[data-lit="true"] .fem{animation-name:femLit}
+@keyframes femDark{0%{transform:translate(0,0) rotate(90deg);opacity:0}8%{opacity:1}45%{transform:translate(100px,0) rotate(90deg)}55%{transform:translate(100px,0) rotate(90deg)}62%{transform:translate(100px,0) rotate(-90deg)}95%{transform:translate(0,0) rotate(-90deg);opacity:1}100%{transform:translate(0,0) rotate(-90deg);opacity:0}}
+@keyframes femLit{0%{transform:translate(0,0) rotate(90deg);opacity:0}8%{opacity:1}30%{transform:translate(30px,0) rotate(90deg)}40%{transform:translate(30px,0) rotate(-90deg)}75%{transform:translate(0,0) rotate(-90deg);opacity:1}100%{transform:translate(0,0) rotate(-90deg);opacity:0}}
+.waves{animation:waves 4s linear infinite}
+@keyframes waves{to{transform:translateX(60px)}}
+.car{animation:car 7s linear infinite}
+@keyframes car{from{transform:translateY(-90px)}to{transform:translateY(430px)}}
+.moonpath{transition:opacity .8s}
+.scene[data-lit="true"] .moonpath{opacity:.3}.scene[data-lit="false"] .moonpath{opacity:.95}
+
+.sac{fill:#a9d8a5;transform-box:fill-box;transform-origin:0 50%;animation:inflate 1.1s ease-in-out infinite;transform:scale(.35)}
+@keyframes inflate{0%,55%,100%{transform:scale(.35)}25%{transform:scale(1.5)}}
+.scene[data-lit="true"] .f1 .sac{animation-duration:2.8s}
+.scene[data-lit="true"] .f2 .sac{animation:none;transform:scale(.35)}
+.f2 .sac,.f2 .ring{animation-delay:.55s}
+.ring{fill:none;stroke:var(--moon);stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:ring 2.2s ease-out infinite}
+@keyframes ring{0%{transform:scale(.3);opacity:.8}80%,100%{transform:scale(3.4);opacity:0}}
+.scene[data-lit="true"] .f1 .ring{animation-duration:4.4s}
+.scene[data-lit="true"] .f2 .ring{display:none}
+.fbody{fill:#4c8a5c}.fleg{fill:#3d7350}
+.reed{animation:sway 4s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+.approach{animation:approach 11s ease-in-out infinite}
+@keyframes approach{0%{transform:translate(0,0);opacity:0}5%{opacity:1}14%{transform:translate(30px,-22px)}22%{transform:translate(60px,0)}38%{transform:translate(60px,0)}46%{transform:translate(95px,-24px)}54%{transform:translate(125px,0)}68%{transform:translate(125px,0)}76%{transform:translate(158px,-22px)}84%{transform:translate(190px,0)}94%{transform:translate(190px,0);opacity:1}100%{transform:translate(190px,0);opacity:0}}
+.snake{fill:none;stroke:#6a9055;stroke-width:5;stroke-linecap:round;stroke-dasharray:9 100;animation:slither 9s linear 2s infinite}
+@keyframes slither{from{stroke-dashoffset:9}to{stroke-dashoffset:-100}}
+
+.cross{animation:cross 15s linear infinite}
+@keyframes cross{from{transform:translate(-90px,0)}to{transform:translate(690px,-36px)}}
+.beam{transform-box:view-box;transform-origin:296px 112px;animation:sweep 7s ease-in-out infinite alternate}
+.beam.b2{animation-direction:alternate-reverse;animation-duration:9s}
+@keyframes sweep{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
+.fall{animation:fall 6s ease-in infinite}
+@keyframes fall{0%{transform:translate(0,0) rotate(0)}20%{transform:translate(36px,18px) rotate(0)}92%{transform:translate(60px,170px) rotate(260deg);opacity:1}100%{transform:translate(60px,170px) rotate(260deg);opacity:0}}
+.impact{fill:none;stroke:var(--lamp-soft);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:impact 6s ease-out infinite}
+@keyframes impact{0%,18%{opacity:0;transform:scale(.2)}22%{opacity:.9;transform:scale(1)}40%{opacity:0;transform:scale(2.4)}100%{opacity:0}}
+.fog{opacity:0;transition:opacity 1s;animation:drift 18s ease-in-out infinite alternate}
+.scene[data-fog="true"] .fog{opacity:1}
+@keyframes drift{to{transform:translateX(-40px)}}
+.beacon{animation:blink 1.6s steps(1) infinite}
+@keyframes blink{50%{opacity:.15}}
+
+.bloom{transition:transform 1.3s cubic-bezier(.3,1.4,.5,1)}
+.scene[data-lit="false"] .bloom{transform:scale(1)}.scene[data-lit="true"] .bloom{transform:scale(.38)}
+.fruit{transition:transform 1.4s,fill 1s;fill:#e0904f;transform-box:fill-box;transform-origin:50% 0}
+.scene[data-lit="false"] .fruit{transform:scale(1)}.scene[data-lit="true"] .fruit{transform:scale(.45);fill:#8c7a5e}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050a18"/><stop offset="1" stop-color="#101c3a"/></linearGradient>
+  <linearGradient id="gSkyglow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a3c" stop-opacity="0"/><stop offset="1" stop-color="#ff9a3c" stop-opacity=".42"/></linearGradient>
+  <radialGradient id="gLamp"><stop offset="0" stop-color="#ffd98a" stop-opacity=".95"/><stop offset=".35" stop-color="#ffb938" stop-opacity=".32"/><stop offset="1" stop-color="#ffb938" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gCone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd98a" stop-opacity=".5"/><stop offset="1" stop-color="#ffb938" stop-opacity=".05"/></linearGradient>
+  <radialGradient id="gMoon"><stop offset="0" stop-color="#dfe8ff" stop-opacity=".9"/><stop offset="1" stop-color="#b9ccff" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gSpill" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ffb938" stop-opacity=".42"/><stop offset="1" stop-color="#ffb938" stop-opacity="0"/></linearGradient>
+  <linearGradient id="gBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd98a" stop-opacity=".6"/><stop offset="1" stop-color="#ffd98a" stop-opacity="0"/></linearGradient>
+  <linearGradient id="gFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fb0d0" stop-opacity="0"/><stop offset=".5" stop-color="#9fb0d0" stop-opacity=".5"/><stop offset="1" stop-color="#9fb0d0" stop-opacity="0"/></linearGradient>
+  <clipPath id="seaClip"><rect width="150" height="340"/></clipPath>
+</defs></svg>
+
+<header class="hero">
+  <span class="label">Contaminación lumínica</span>
+  <h1>Ecosistemas bajo luz artificial</h1>
+  <p>Seis grupos de seres vivos y una misma lámpara. Alterna entre noche natural y luz artificial para ver cómo cambia el comportamiento de cada uno.</p>
+  <div class="hero-row">
+    <div class="seg" id="globalSeg" role="group" aria-label="Iluminación de todas las escenas">
+      <button type="button" data-global="false" aria-pressed="false">Noche natural</button>
+      <button type="button" data-global="true" aria-pressed="true">Luz artificial</button>
+    </div>
+    <nav class="jump" aria-label="Ir a un grupo">
+      <a href="#insectos">Insectos</a><a href="#murcielagos">Murciélagos</a><a href="#tortugas">Tortugas marinas</a><a href="#anfibios">Anfibios</a><a href="#aves">Aves</a><a href="#plantas">Plantas</a>
+    </nav>
+  </div>
+</header>
+<main>
+<section class="scene" id="insectos" data-lit="true">
+  <div class="scene-head"><h2>Insectos</h2><span class="label">Desorientación y alteración de las cadenas alimentarias</span></div>
+  <p class="lead">Muchos insectos nocturnos son atraídos por determinadas fuentes luminosas o modifican su vuelo cerca de ellas. Pueden quedar atrapados dando vueltas alrededor de una lámpara, sufrir mayor exposición a depredadores o gastar energía innecesariamente.</p>
+  <div class="stage">
+    <div class="viz">
+      <svg class="scene-svg" viewBox="0 0 600 340" role="img" aria-label="Polillas que giran alrededor de una farola o visitan una flor según haya luz artificial o no" data-horizon="282" data-moon="520,56">
+        <rect y="282" width="600" height="58" fill="#0a1222"/>
+        <path class="only-lit" d="M163 108 L92 282 H248 L177 108Z" fill="url(#gCone)"/>
+        <circle class="only-lit glow" cx="170" cy="104" r="125" fill="url(#gLamp)"/>
+        <rect x="166" y="108" width="8" height="174" fill="#1a2543"/>
+        <path d="M146 104 h48 l-8 -16 h-32z" fill="#27355c"/>
+        <circle class="bulb" cx="170" cy="106" r="6"/>
+        <circle class="only-dark" cx="470" cy="198" r="62" fill="url(#gMoon)" opacity=".4"/>
+        <path d="M470 282 C466 254 475 232 470 208" fill="none" stroke="#2c5240" stroke-width="4"/>
+        <path d="M470 252 q24 -4 32 -24 q-24 -2 -32 24z" fill="#2c5240"/>
+        <path d="M468 240 q-22 -4 -30 -22 q22 -2 30 22z" fill="#2c5240"/>
+        <g transform="translate(470 198)" fill="#e4ecff">
+          <ellipse cy="-13" rx="6" ry="12"/><ellipse cy="-13" rx="6" ry="12" transform="rotate(60)"/><ellipse cy="-13" rx="6" ry="12" transform="rotate(120)"/>
+          <ellipse cy="-13" rx="6" ry="12" transform="rotate(180)"/><ellipse cy="-13" rx="6" ry="12" transform="rotate(240)"/><ellipse cy="-13" rx="6" ry="12" transform="rotate(300)"/>
+          <circle r="5.5" fill="#ffe9a8"/>
+        </g>
+        <g class="only-dark">
+          <g class="hover" style="--t:7s"><g transform="translate(446 170)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="hover" style="--t:9s;animation-delay:-3s"><g transform="translate(494 176)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="hover" style="--t:8s;animation-delay:-5s"><g transform="translate(470 148)"><g class="moth" data-sprite="moth"></g></g></g>
+        </g>
+        <g class="only-lit">
+          <g class="spin" style="--ox:170px;--oy:106px;--d:5s"><g transform="translate(215 106)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="spin" style="--ox:170px;--oy:106px;--d:3.4s;animation-direction:reverse"><g transform="translate(198 106)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="spin" style="--ox:170px;--oy:106px;--d:7s;animation-delay:-2s"><g transform="translate(232 106)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="spin" style="--ox:170px;--oy:106px;--d:4.2s;animation-delay:-1s"><g transform="translate(130 106)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="spin" style="--ox:170px;--oy:106px;--d:6s;animation-direction:reverse;animation-delay:-3s"><g transform="translate(170 62)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="swoop"><g transform="translate(0 62) scale(.9)"><g class="bat" data-sprite="bat"></g></g></g>
+        </g>
+      </svg>
+      <div class="toggle"><div class="seg" role="group" aria-label="Iluminación de la escena"><button type="button" data-set="false" aria-pressed="false">Noche natural</button><button type="button" data-set="true" aria-pressed="true">Luz artificial</button></div></div>
+      <p class="caption" aria-live="polite"><span class="c-lit">Con la lámpara encendida, las polillas giran a su alrededor, gastan energía y quedan a la vista de los depredadores.</span><span class="c-dark">Sin luz artificial, las polillas se alimentan y visitan flores nocturnas.</span></p>
+    </div>
+    <div class="info">
+      <div class="panel">
+        <div class="meter" data-off="85" data-on="30"><div class="m-top"><span>Tiempo para alimentarse y reproducirse</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="15" data-on="85"><div class="m-top"><span>Energía gastada en vueltas</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="20" data-on="75"><div class="m-top"><span>Exposición a depredadores</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+      </div>
+      <ul class="points"><li>Puede reducirse el tiempo disponible para alimentarse y reproducirse.</li><li>La actividad de polillas y otros insectos polinizadores puede cambiar.</li><li>Los depredadores que dependen de ellos también pueden verse afectados.</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="murcielagos" data-lit="true">
+  <div class="scene-head"><h2>Murciélagos y otros mamíferos nocturnos</h2><span class="label">Rutas fragmentadas y competencia</span></div>
+  <p class="lead">Algunas especies de murciélagos evitan los espacios iluminados, lo que fragmenta sus rutas de desplazamiento y reduce el acceso a refugios o zonas de alimentación. Otras especies tolerantes a la luz pueden aprovechar la concentración de insectos junto a las lámparas.</p>
+  <div class="stage">
+    <div class="viz">
+      <svg class="scene-svg" viewBox="0 0 600 340" role="img" aria-label="Un murciélago sensible a la luz cruza el corredor o da media vuelta ante la lámpara, mientras otro caza insectos junto a ella" data-horizon="285" data-moon="430,50">
+        <rect y="285" width="600" height="55" fill="#0a1222"/>
+        <rect x="60" y="150" width="16" height="135" fill="#141d36"/>
+        <g fill="#0f1830"><circle cx="68" cy="140" r="38"/><circle cx="40" cy="165" r="26"/><circle cx="96" cy="165" r="26"/></g>
+        <ellipse cx="68" cy="205" rx="5" ry="9" fill="#05080f"/>
+        <ellipse cx="520" cy="290" rx="72" ry="9" fill="#0c3050"/>
+        <g class="only-dark"><path class="flow" d="M90 172 C190 146 400 146 500 186"/></g>
+        <g class="only-lit"><path class="flow" d="M90 172 C140 158 190 152 232 152"/><path class="flow" d="M368 152 C420 156 465 168 500 186"/><path d="M290 140 L310 160 M310 140 L290 160" stroke="#ffb938" stroke-width="2.5" stroke-linecap="round"/></g>
+        <path class="only-lit" d="M290 132 L220 285 H380 L310 132Z" fill="url(#gCone)"/>
+        <circle class="only-lit glow" cx="300" cy="126" r="130" fill="url(#gLamp)"/>
+        <rect x="296" y="130" width="8" height="155" fill="#1a2543"/>
+        <path d="M276 126 h48 l-8 -16 h-32z" fill="#27355c"/>
+        <circle class="bulb" cx="300" cy="128" r="6"/>
+        <g fill="#ffe9a8">
+          <circle class="hover" cx="480" cy="210" r="1.6" style="--t:6s"/><circle class="hover" cx="510" cy="230" r="1.6" style="--t:8s;animation-delay:-2s"/><circle class="hover" cx="545" cy="215" r="1.6" style="--t:7s;animation-delay:-4s"/>
+          <circle class="hover" cx="495" cy="250" r="1.6" style="--t:9s;animation-delay:-1s"/><circle class="hover" cx="535" cy="255" r="1.6" style="--t:7s;animation-delay:-5s"/><circle class="hover" cx="470" cy="235" r="1.6" style="--t:8s;animation-delay:-3s"/>
+        </g>
+        <g class="only-lit" fill="#ffe9a8">
+          <g class="spin" style="--ox:300px;--oy:128px;--d:2.4s"><circle cx="318" cy="128" r="1.6"/></g>
+          <g class="spin" style="--ox:300px;--oy:128px;--d:3.1s;animation-direction:reverse"><circle cx="336" cy="128" r="1.6"/></g>
+          <g class="spin" style="--ox:300px;--oy:128px;--d:3.8s;animation-delay:-1s"><circle cx="354" cy="128" r="1.6"/></g>
+          <g class="spin" style="--ox:300px;--oy:128px;--d:2.9s;animation-delay:-2s"><circle cx="282" cy="128" r="1.6"/></g>
+          <g class="spin" style="--ox:300px;--oy:128px;--d:4.4s;animation-direction:reverse"><circle cx="300" cy="84" r="1.6"/></g>
+          <g class="spin" style="--ox:300px;--oy:128px;--d:3.4s"><g transform="translate(342 128) scale(.8)"><g class="bat tol" data-sprite="bat"></g></g></g>
+        </g>
+        <g class="flightS"><g transform="translate(90 170)"><g class="bat" data-sprite="bat"></g></g></g>
+        <ellipse cx="562" cy="284" rx="12" ry="6" fill="#05080f"/>
+        <g class="only-lit"><circle cx="558" cy="283" r="1.2" fill="#ffe9a8"/><circle cx="565" cy="283" r="1.2" fill="#ffe9a8"/></g>
+        <g class="only-dark"><g transform="translate(430 280)"><g class="scurry"><ellipse rx="9" ry="5" fill="#4a5680"/><circle cx="8" cy="-1" r="3.5" fill="#4a5680"/><circle cx="6" cy="-5" r="2.2" fill="#4a5680"/><path d="M-9 0 q-8 2 -12 -3" fill="none" stroke="#4a5680" stroke-width="1.5"/></g></g></g>
+      </svg>
+      <div class="toggle"><div class="seg" role="group" aria-label="Iluminación de la escena"><button type="button" data-set="false" aria-pressed="false">Noche natural</button><button type="button" data-set="true" aria-pressed="true">Luz artificial</button></div></div>
+      <p class="caption" aria-live="polite"><span class="c-lit">El murciélago sensible a la luz da media vuelta y pierde su ruta. La especie tolerante caza insectos junto a la lámpara.</span><span class="c-dark">Sin lámparas, la ruta entre el refugio y la zona de alimentación queda abierta.</span></p>
+    </div>
+    <div class="info">
+      <div class="panel">
+        <div class="meter" data-off="90" data-on="20"><div class="m-top"><span>Ruta abierta a la zona de alimentación (especies sensibles)</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="15" data-on="85"><div class="m-top"><span>Insectos aprovechados junto a la lámpara (especies tolerantes)</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="25" data-on="70"><div class="m-top"><span>Competencia entre especies</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+      </div>
+      <ul class="points"><li>Se alteran las rutas de vuelo y los lugares de alimentación.</li><li>Puede cambiar la competencia entre especies.</li><li>Los mamíferos nocturnos terrestres también pueden modificar sus horarios y el uso del hábitat.</li></ul>
+    </div>
+  </div>
+</section>
+<section class="scene" id="tortugas" data-lit="true">
+  <div class="scene-head"><h2>Tortugas marinas</h2><span class="label">Pérdida de orientación</span></div>
+  <p class="lead">En playas de anidación, las luces artificiales pueden desorientar a las crías que emergen de sus nidos. En lugar de desplazarse hacia el mar, pueden dirigirse hacia carreteras, edificios o fuentes luminosas. Es uno de los ejemplos más claros para mostrar cómo una fuente luminosa puede afectar la supervivencia de una especie.</p>
+  <div class="stage">
+    <div class="viz">
+      <svg class="scene-svg" viewBox="0 0 600 340" role="img" aria-label="Vista aérea de una playa: las crías van hacia el mar sin luces o hacia la carretera y los edificios iluminados" data-nobackdrop="1">
+        <rect width="600" height="340" fill="#0a1222"/>
+        <rect width="150" height="340" fill="#0b2f4a"/>
+        <g clip-path="url(#seaClip)"><g class="waves" fill="none" stroke="#2f6a93" stroke-width="1.5" opacity=".55">
+          <path d="M-60 30 q15 -7 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/><path d="M-60 75 q15 -7 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/>
+          <path d="M-60 120 q15 -7 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/><path d="M-60 165 q15 -7 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/>
+          <path d="M-60 210 q15 -7 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/><path d="M-60 255 q15 -7 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/>
+          <path d="M-60 300 q15 -7 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/></g></g>
+        <ellipse class="moonpath" cx="75" cy="170" rx="22" ry="150" fill="url(#gMoon)"/>
+        <rect x="150" width="30" height="340" fill="#2a2820"/>
+        <rect x="178" width="254" height="340" fill="#3d382c"/>
+        <g class="only-dark"><rect x="432" width="168" height="340" fill="#1b2118"/><g fill="#141d13"><circle cx="500" cy="60" r="22"/><circle cx="540" cy="140" r="28"/><circle cx="505" cy="230" r="24"/><circle cx="560" cy="300" r="26"/></g></g>
+        <g class="only-lit">
+          <rect x="432" width="40" height="340" fill="#151a26"/><path d="M452 0 V340" stroke="#3a4668" stroke-dasharray="14 12"/>
+          <g fill="#141f3a"><rect x="486" y="14" width="114" height="80"/><rect x="486" y="110" width="90" height="70"/><rect x="486" y="196" width="114" height="60"/><rect x="486" y="272" width="80" height="60"/></g>
+          <rect x="178" width="254" height="340" fill="url(#gSpill)"/>
+          <g class="glow"><circle cx="476" cy="40" r="60" fill="url(#gLamp)"/><circle cx="476" cy="125" r="60" fill="url(#gLamp)"/><circle cx="476" cy="210" r="60" fill="url(#gLamp)"/><circle cx="476" cy="295" r="60" fill="url(#gLamp)"/></g>
+          <g fill="#ffe3a0"><circle cx="476" cy="40" r="3"/><circle cx="476" cy="125" r="3"/><circle cx="476" cy="210" r="3"/><circle cx="476" cy="295" r="3"/></g>
+          <g transform="translate(452 0)"><g class="car"><rect x="-7" width="14" height="26" rx="4" fill="#2b3558"/><path d="M-6 26 L-16 66 L16 66 L6 26Z" fill="url(#gCone)"/></g></g>
+        </g>
+        <circle cx="300" cy="150" r="13" fill="#2a261e" stroke="#4a4436"/>
+        <g transform="translate(300 150)"><g class="hat turtle" style="--dy:-34px;--delay:0s"><g data-sprite="hatch"></g></g></g>
+        <g transform="translate(300 150)"><g class="hat turtle" style="--dy:12px;--delay:-1.4s"><g data-sprite="hatch"></g></g></g>
+        <g transform="translate(300 150)"><g class="hat turtle" style="--dy:-12px;--delay:-2.8s"><g data-sprite="hatch"></g></g></g>
+        <g transform="translate(300 150)"><g class="hat turtle" style="--dy:28px;--delay:-4.2s"><g data-sprite="hatch"></g></g></g>
+        <g transform="translate(300 150)"><g class="hat turtle" style="--dy:0px;--delay:-5.6s"><g data-sprite="hatch"></g></g></g>
+        <g transform="translate(165 262)"><g class="fem turtle"><g transform="scale(3.4)" data-sprite="hatch"></g></g></g>
+      </svg>
+      <div class="toggle"><div class="seg" role="group" aria-label="Iluminación de la escena"><button type="button" data-set="false" aria-pressed="false">Noche natural</button><button type="button" data-set="true" aria-pressed="true">Luz artificial</button></div></div>
+      <p class="caption" aria-live="polite"><span class="c-lit">Las crías se dirigen a las luces de la carretera y los edificios. La hembra duda y vuelve al mar sin anidar.</span><span class="c-dark">Las crías avanzan hacia el brillo del horizonte marino y llegan al agua. La hembra completa la anidación.</span></p>
+    </div>
+    <div class="info">
+      <div class="panel">
+        <div class="meter" data-off="90" data-on="15"><div class="m-top"><span>Crías que llegan al mar</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="15" data-on="85"><div class="m-top"><span>Riesgo de deshidratación y depredación</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="80" data-on="35"><div class="m-top"><span>Hembras que completan la anidación</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+      </div>
+      <ul class="points"><li>Aumenta el riesgo de deshidratación, agotamiento y depredación.</li><li>La iluminación costera puede interferir con el comportamiento de las hembras al buscar sitios de anidación.</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="anfibios" data-lit="true">
+  <div class="scene-head"><h2>Anfibios</h2><span class="label">Cambios en actividad y reproducción</span></div>
+  <p class="lead">En algunas especies de ranas y sapos, la iluminación nocturna puede modificar los patrones de vocalización, alimentación, actividad y relaciones entre depredadores y presas. Los efectos dependen de la especie y de las condiciones ambientales.</p>
+  <div class="stage">
+    <div class="viz">
+      <svg class="scene-svg" viewBox="0 0 600 340" role="img" aria-label="Dos ranas cantan junto a una charca; con una lámpara cercana cantan menos y los insectos se concentran en la luz" data-horizon="262" data-moon="90,56">
+        <rect y="262" width="600" height="78" fill="#0d1626"/>
+        <path d="M20 272 Q150 254 300 262 T580 272 V340 H20Z" fill="#0c2f4a"/>
+        <ellipse cx="150" cy="268" rx="46" ry="10" fill="#14203a"/><ellipse cx="330" cy="270" rx="46" ry="10" fill="#14203a"/>
+        <path class="only-lit" d="M430 126 L360 272 H520 L450 126Z" fill="url(#gCone)"/>
+        <circle class="only-lit glow" cx="440" cy="122" r="150" fill="url(#gLamp)"/>
+        <rect x="436" y="126" width="8" height="146" fill="#1a2543"/>
+        <path d="M416 122 h48 l-8 -16 h-32z" fill="#27355c"/>
+        <circle class="bulb" cx="440" cy="124" r="6"/>
+        <g stroke="#2a4a3a" stroke-width="2" fill="none">
+          <g class="reed"><path d="M240 280 q4 -40 -3 -84"/><rect x="234" y="196" width="6" height="16" rx="3" fill="#4a3a2a" stroke="none"/></g>
+          <g class="reed" style="animation-delay:-1.5s"><path d="M255 282 q-3 -34 4 -66"/></g>
+          <g class="reed" style="animation-delay:-2.5s"><path d="M70 276 q-4 -36 3 -72"/><rect x="67" y="206" width="6" height="14" rx="3" fill="#4a3a2a" stroke="none"/></g>
+          <g class="reed" style="animation-delay:-3s"><path d="M520 284 q4 -30 -2 -60"/></g>
+        </g>
+        <path class="snake only-lit" pathLength="100" d="M600 280 C540 266 500 294 450 280 S380 294 340 282"/>
+        <g class="only-dark" fill="#ffe9a8">
+          <circle class="hover" cx="215" cy="230" r="1.6" style="--t:6s"/><circle class="hover" cx="290" cy="215" r="1.6" style="--t:8s;animation-delay:-2s"/><circle class="hover" cx="110" cy="220" r="1.6" style="--t:7s;animation-delay:-4s"/><circle class="hover" cx="380" cy="235" r="1.6" style="--t:9s;animation-delay:-1s"/>
+        </g>
+        <g class="only-lit" fill="#ffe9a8">
+          <g class="spin" style="--ox:440px;--oy:124px;--d:2.6s"><circle cx="460" cy="124" r="1.6"/></g>
+          <g class="spin" style="--ox:440px;--oy:124px;--d:3.4s;animation-direction:reverse"><circle cx="478" cy="124" r="1.6"/></g>
+          <g class="spin" style="--ox:440px;--oy:124px;--d:4s;animation-delay:-1s"><circle cx="498" cy="124" r="1.6"/></g>
+          <g class="spin" style="--ox:440px;--oy:124px;--d:3s;animation-delay:-2s"><circle cx="422" cy="124" r="1.6"/></g>
+        </g>
+        <g transform="translate(150 266)" class="f1"><g data-sprite="frog"></g><circle class="ring" cx="22" cy="-10" r="8"/><circle class="ring" cx="22" cy="-10" r="8" style="animation-delay:.7s"/></g>
+        <g transform="translate(330 268)" class="f2"><g data-sprite="frog"></g><circle class="ring" cx="22" cy="-10" r="8"/><circle class="ring" cx="22" cy="-10" r="8" style="animation-delay:1.25s"/></g>
+        <g class="only-dark"><g transform="translate(470 268) scale(-.7 .7)"><g class="approach"><g data-sprite="frog"></g></g></g></g>
+      </svg>
+      <div class="toggle"><div class="seg" role="group" aria-label="Iluminación de la escena"><button type="button" data-set="false" aria-pressed="false">Noche natural</button><button type="button" data-set="true" aria-pressed="true">Luz artificial</button></div></div>
+      <p class="caption" aria-live="polite"><span class="c-lit">Con luz cambian los cantos y la actividad, y los insectos se concentran lejos de la charca. El efecto varía según la especie.</span><span class="c-dark">Sin luz artificial, los machos cantan por turnos y una hembra se acerca.</span></p>
+    </div>
+    <div class="info">
+      <div class="panel">
+        <div class="meter" data-off="85" data-on="35"><div class="m-top"><span>Cantos de cortejo</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="70" data-on="25"><div class="m-top"><span>Insectos disponibles junto a la charca</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="20" data-on="65"><div class="m-top"><span>Exposición a depredadores</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+      </div>
+      <ul class="points"><li>Puede cambiar el momento en que los individuos buscan pareja.</li><li>Se pueden modificar las interacciones en charcas y humedales.</li><li>Los cambios en la actividad de insectos también pueden afectar su alimentación.</li></ul>
+    </div>
+  </div>
+</section>
+<section class="scene" id="aves" data-lit="true" data-fog="false">
+  <div class="scene-head"><h2>Aves</h2><span class="label">Migración, orientación y colisiones</span></div>
+  <p class="lead">Algunas aves migratorias utilizan señales celestes y otras referencias ambientales durante sus desplazamientos nocturnos. La iluminación intensa puede atraerlas, desorientarlas y aumentar el riesgo de colisiones con edificios.</p>
+  <div class="stage">
+    <div class="viz">
+      <svg class="scene-svg" viewBox="0 0 600 340" role="img" aria-label="Una bandada cruza el cielo oscuro o da vueltas alrededor de una torre iluminada, y un ave choca contra ella" data-horizon="300" data-moon="520,50">
+        <path class="only-dark" d="M0 118 Q300 80 600 70" fill="none" stroke="#b9ccff" stroke-dasharray="3 7" opacity=".35"/>
+        <g class="only-lit"><g class="beam"><path d="M296 112 L258 -40 L334 -40Z" fill="url(#gBeam)"/></g><g class="beam b2"><path d="M296 112 L262 -40 L330 -40Z" fill="url(#gBeam)"/></g></g>
+        <g data-skyline></g>
+        <rect x="295" y="82" width="2" height="30" fill="#27355c"/><circle class="beacon" cx="296" cy="80" r="3" fill="#ff5a4a"/>
+        <rect class="fog" x="-40" y="80" width="680" height="230" fill="url(#gFog)"/>
+        <g class="only-dark"><g class="cross"><g transform="translate(0 112) scale(.9)">
+          <g transform="translate(0 0)"><g class="bird" data-sprite="bird"></g></g><g transform="translate(-16 10)"><g class="bird" data-sprite="bird"></g></g><g transform="translate(16 10)"><g class="bird" data-sprite="bird"></g></g>
+          <g transform="translate(-32 20)"><g class="bird" data-sprite="bird"></g></g><g transform="translate(32 20)"><g class="bird" data-sprite="bird"></g></g><g transform="translate(-48 30)"><g class="bird" data-sprite="bird"></g></g><g transform="translate(48 30)"><g class="bird" data-sprite="bird"></g></g>
+        </g></g></g>
+        <g class="only-lit">
+          <g class="spin" style="--ox:296px;--oy:118px;--d:7s"><g transform="translate(366 118)"><g class="bird" data-sprite="bird"></g></g></g>
+          <g class="spin" style="--ox:296px;--oy:118px;--d:9s;animation-direction:reverse"><g transform="translate(391 118)"><g class="bird" data-sprite="bird"></g></g></g>
+          <g class="spin" style="--ox:296px;--oy:118px;--d:5.5s;animation-delay:-2s"><g transform="translate(351 118)"><g class="bird" data-sprite="bird"></g></g></g>
+          <g class="spin" style="--ox:296px;--oy:118px;--d:11s;animation-delay:-4s"><g transform="translate(406 118)"><g class="bird" data-sprite="bird"></g></g></g>
+          <g class="spin" style="--ox:296px;--oy:118px;--d:8s;animation-direction:reverse;animation-delay:-3s"><g transform="translate(216 118)"><g class="bird" data-sprite="bird"></g></g></g>
+          <g transform="translate(230 120)"><g class="fall"><g class="bird" data-sprite="bird"></g></g></g>
+          <circle class="impact" cx="270" cy="139" r="10"/>
+        </g>
+      </svg>
+      <div class="toggle">
+        <div class="seg" role="group" aria-label="Iluminación de la escena"><button type="button" data-set="false" aria-pressed="false">Noche natural</button><button type="button" data-set="true" aria-pressed="true">Luz artificial</button></div>
+        <button type="button" class="chip" id="fogBtn" aria-pressed="false">Niebla y nubes bajas</button>
+      </div>
+      <p class="caption" aria-live="polite"><span class="c-lit">Las aves migratorias se desvían hacia el edificio iluminado, dan vueltas y aumenta el riesgo de colisión.</span><span class="c-fog">Con niebla o nubes bajas la luz se difunde, más aves se desvían y el riesgo de colisión sube.</span><span class="c-dark">Con el cielo oscuro, la bandada mantiene su rumbo guiada por señales celestes.</span></p>
+    </div>
+    <div class="info">
+      <div class="panel">
+        <div class="meter" data-off="90" data-on="35" data-fog="-20"><div class="m-top"><span>Aves que siguen su ruta</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="5" data-on="65" data-fog="20"><div class="m-top"><span>Vueltas alrededor del edificio</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="10" data-on="55" data-fog="30"><div class="m-top"><span>Riesgo de colisión</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+      </div>
+      <ul class="points"><li>Puede interrumpir las rutas migratorias.</li><li>Las aves pueden permanecer dando vueltas alrededor de edificios iluminados.</li><li>La iluminación de fachadas y torres puede aumentar el riesgo durante determinadas condiciones meteorológicas.</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="plantas" data-lit="true">
+  <div class="scene-head"><h2>Plantas</h2><span class="label">Polinización y ciclos estacionales</span></div>
+  <p class="lead">La luz artificial puede alterar ritmos biológicos relacionados con la duración de la noche, incluida la respuesta de algunas plantas al fotoperiodo. También puede modificar las visitas de polinizadores nocturnos.</p>
+  <div class="stage">
+    <div class="viz">
+      <svg class="scene-svg" viewBox="0 0 600 340" role="img" aria-label="Una planta con flor y fruto junto a una farola: con luz la flor no se abre y la polilla gira en la lámpara; sin luz la flor se abre, la poliniza la polilla y el fruto crece" data-horizon="290" data-moon="520,56">
+        <rect y="290" width="600" height="50" fill="#0a1222"/>
+        <path class="only-lit" d="M200 134 L130 290 H290 L220 134Z" fill="url(#gCone)"/>
+        <circle class="only-lit glow" cx="210" cy="128" r="150" fill="url(#gLamp)"/>
+        <rect x="206" y="132" width="8" height="158" fill="#1a2543"/>
+        <path d="M186 128 h48 l-8 -16 h-32z" fill="#27355c"/>
+        <circle class="bulb" cx="210" cy="130" r="6"/>
+        <circle class="only-dark" cx="360" cy="150" r="70" fill="url(#gMoon)" opacity=".35"/>
+        <path d="M360 290 C356 250 364 210 360 160" fill="none" stroke="#3a6a50" stroke-width="4.5"/>
+        <path d="M358 255 q-34 -4 -46 -28 q34 -2 46 28z" fill="#2f5a43"/><path d="M362 235 q34 -4 44 -26 q-34 -2 -44 26z" fill="#2f5a43"/><path d="M359 205 q-26 -2 -36 -22 q26 -2 36 22z" fill="#2f5a43"/>
+        <path d="M361 215 q36 -10 62 6" fill="none" stroke="#3a6a50" stroke-width="3"/>
+        <circle class="fruit" cx="424" cy="222" r="12"/>
+        <g transform="translate(360 150)"><g class="bloom" fill="#eaf0ff">
+          <ellipse cy="-22" rx="7" ry="22"/><ellipse cy="-22" rx="7" ry="22" transform="rotate(51)"/><ellipse cy="-22" rx="7" ry="22" transform="rotate(103)"/><ellipse cy="-22" rx="7" ry="22" transform="rotate(154)"/>
+          <ellipse cy="-22" rx="7" ry="22" transform="rotate(206)"/><ellipse cy="-22" rx="7" ry="22" transform="rotate(257)"/><ellipse cy="-22" rx="7" ry="22" transform="rotate(309)"/>
+          <circle r="7" fill="#ffe9a8"/>
+        </g></g>
+        <g class="only-dark">
+          <g class="hover" style="--t:6s"><g transform="translate(330 118)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="hover" style="--t:9s;animation-delay:-3s"><g transform="translate(470 196) scale(.7)"><g class="bat" data-sprite="bat"></g></g></g>
+        </g>
+        <g class="only-lit">
+          <g class="spin" style="--ox:210px;--oy:130px;--d:4.6s"><g transform="translate(250 130)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="spin" style="--ox:210px;--oy:130px;--d:6s;animation-direction:reverse"><g transform="translate(180 130)"><g class="moth" data-sprite="moth"></g></g></g>
+          <g class="spin" style="--ox:210px;--oy:130px;--d:3.4s;animation-delay:-1s"><g transform="translate(210 98)"><g class="moth" data-sprite="moth"></g></g></g>
+        </g>
+      </svg>
+      <div class="toggle"><div class="seg" role="group" aria-label="Iluminación de la escena"><button type="button" data-set="false" aria-pressed="false">Noche natural</button><button type="button" data-set="true" aria-pressed="true">Luz artificial</button></div></div>
+      <p class="caption" aria-live="polite"><span class="c-lit">La lámpara acorta la noche que perciben las plantas: la flor no se abre a su hora, llegan menos polinizadores y se forma menos fruto.</span><span class="c-dark">En noches oscuras la flor se abre, la polilla la poliniza y el fruto madura para quien se alimenta de él.</span></p>
+    </div>
+    <div class="info">
+      <div class="panel">
+        <div class="meter" data-off="85" data-on="30"><div class="m-top"><span>Floración en el momento habitual</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="80" data-on="30"><div class="m-top"><span>Polinización nocturna</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter" data-off="75" data-on="30"><div class="m-top"><span>Fruto formado</span><b class="m-val"></b></div><div class="bar"><i></i></div></div>
+        <div class="meter"><div class="m-top"><span>Noche continua, ejemplo ilustrativo</span><b class="hours-val m-val"></b></div><div class="hours" aria-hidden="true"></div><div class="hours-scale" aria-hidden="true"><span>18 h</span><span>0 h</span><span>6 h</span></div></div>
+      </div>
+      <ul class="points"><li>Puede cambiar el momento de floración en ciertas especies.</li><li>Puede disminuir o redistribuir la polinización nocturna.</li><li>Las consecuencias pueden extenderse a la producción de frutos y a otros organismos que dependen de ellos.</li></ul>
+    </div>
+  </div>
+</section>
+</main>
+<p class="note">Las escenas son esquemas ilustrativos. Los niveles Alto, Medio y Bajo muestran la tendencia descrita en cada caso y no son mediciones. En el ejemplo de las plantas, una lámpara encendida durante cuatro horas de la noche acorta la oscuridad continua de 12 a 8 horas. Los efectos reales varían según la especie y las condiciones ambientales.</p>
+<script>
+(function(){
+  var S = {
+    moth:'<g class="wing wl"><path d="M-1 -1C-10 -9 -14 2 -2 3Z"/></g><g class="wing wr"><path d="M1 -1C10 -9 14 2 2 3Z"/></g><ellipse rx="1.8" ry="5"/>',
+    bat:'<path class="wing wl" d="M-2 -2C-8 -11 -17 -10 -25 -3C-20 -4 -18 0 -16 4C-13 1 -10 3 -7 5C-5 3 -3 2 -2 2Z"/><path class="wing wr" d="M2 -2C8 -11 17 -10 25 -3C20 -4 18 0 16 4C13 1 10 3 7 5C5 3 3 2 2 2Z"/><ellipse rx="2.8" ry="4.5"/><circle cy="-5" r="2.4"/><path d="M-2.4 -6.5L-3.4 -10L-0.6 -7.4ZM2.4 -6.5L3.4 -10L0.6 -7.4Z"/>',
+    bird:'<path class="wing wl" d="M0 0C-5 -6 -10 -5 -14 0C-9 -2 -5 -1 0 2Z"/><path class="wing wr" d="M0 0C5 -6 10 -5 14 0C9 -2 5 -1 0 2Z"/><ellipse rx="1.6" ry="3.2" cy="1"/>',
+    hatch:'<g class="fl fl-l"><path d="M-3.5 -3L-11 -5.5L-8 0Z"/></g><g class="fl fl-r"><path d="M3.5 -3L11 -5.5L8 0Z"/></g><path d="M-3 3.5L-7 7L-2.5 6ZM3 3.5L7 7L2.5 6Z"/><ellipse rx="4.6" ry="6.5"/><circle cy="-8.2" r="2.7"/>',
+    frog:'<ellipse class="fleg" cx="-16" cy="-3" rx="10" ry="5" transform="rotate(-18 -16 -3)"/><ellipse class="fbody" cx="-4" cy="-9" rx="20" ry="12"/><ellipse class="fbody" cx="11" cy="-14" rx="11" ry="8"/><rect class="fleg" x="6" y="-6" width="4" height="7" rx="2"/><ellipse class="sac" cx="17" cy="-9" rx="6" ry="5"/><circle cx="14" cy="-21" r="4.2" fill="#d9e8c9"/><circle cx="15" cy="-21" r="1.8" fill="#10200f"/>'
+  };
+  document.querySelectorAll('[data-sprite]').forEach(function(g){ g.innerHTML = S[g.getAttribute('data-sprite')] || ''; });
+
+  var seed = 7;
+  function rnd(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+
+  document.querySelectorAll('svg[data-horizon]').forEach(function(svg){
+    var hz = +svg.getAttribute('data-horizon'), mp = (svg.getAttribute('data-moon') || '520,56').split(',').map(Number);
+    var h = '<g class="backdrop"><rect width="600" height="340" fill="url(#gSky)"/><g class="stars" fill="#e9effd">';
+    for(var i = 0; i < 38; i++){
+      h += '<circle class="star" cx="' + (rnd() * 600).toFixed(1) + '" cy="' + (rnd() * hz * 0.7).toFixed(1) + '" r="' + (0.6 + rnd() * 1.1).toFixed(2) + '" style="animation-delay:-' + (rnd() * 4).toFixed(1) + 's"/>';
+    }
+    h += '</g><circle class="moonglow" cx="' + mp[0] + '" cy="' + mp[1] + '" r="46" fill="url(#gMoon)"/><circle class="moon" cx="' + mp[0] + '" cy="' + mp[1] + '" r="13" fill="#e8eeff"/>';
+    h += '<rect class="only-lit" y="' + (hz - 190) + '" width="600" height="190" fill="url(#gSkyglow)"/></g>';
+    svg.insertAdjacentHTML('afterbegin', h);
+  });
+
+  // Horizonte de la ciudad (escena de aves)
+  var sky = document.querySelector('[data-skyline]');
+  if(sky){
+    var B = [[20,210,60,130],[90,240,48,100],[150,180,64,160],[270,110,52,230],[350,200,70,140],[430,230,50,110],[490,170,80,170]];
+    var bs = '', ws = '<g class="only-lit" fill="#ffd98a">';
+    B.forEach(function(b){
+      bs += '<rect x="' + b[0] + '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '" fill="#0e172d"/>';
+      for(var y = b[1] + 8; y < 296; y += 12){
+        for(var x = b[0] + 6; x < b[0] + b[2] - 6; x += 10){
+          if(rnd() > 0.35){ ws += '<rect x="' + x + '" y="' + y + '" width="4" height="6"/>'; }
+        }
+      }
+    });
+    sky.innerHTML = '<rect y="300" width="600" height="40" fill="#0a1222"/>' + bs + ws + '</g>';
+  }
+
+  // Horas de noche (escena de plantas)
+  var hoursEl = document.querySelector('.hours');
+  if(hoursEl){ for(var k = 0; k < 12; k++){ hoursEl.appendChild(document.createElement('i')); } }
+
+  function word(v){ return v >= 70 ? 'Alto' : v >= 40 ? 'Medio' : 'Bajo'; }
+  function render(sc){
+    var lit = sc.getAttribute('data-lit') === 'true', fog = sc.getAttribute('data-fog') === 'true';
+    sc.querySelectorAll('.viz .seg button').forEach(function(b){ b.setAttribute('aria-pressed', String((b.getAttribute('data-set') === 'true') === lit)); });
+    sc.querySelectorAll('.meter[data-on]').forEach(function(m){
+      var v = +(lit ? m.getAttribute('data-on') : m.getAttribute('data-off'));
+      if(lit && fog && m.getAttribute('data-fog')){ v += +m.getAttribute('data-fog'); }
+      v = Math.max(0, Math.min(100, v));
+      m.querySelector('i').style.width = v + '%';
+      m.querySelector('.m-val').textContent = word(v);
+    });
+    var hv = sc.querySelector('.hours');
+    if(hv){
+      hv.querySelectorAll('i').forEach(function(c, i){ c.className = (lit && i < 4) ? 'on' : ''; });
+      sc.querySelector('.hours-val').textContent = lit ? '8 h seguidas' : '12 h seguidas';
+    }
+    var fb = sc.querySelector('#fogBtn');
+    if(fb){ fb.setAttribute('aria-pressed', String(fog)); }
+  }
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  function syncGlobal(){
+    var n = scenes.filter(function(s){ return s.getAttribute('data-lit') === 'true'; }).length;
+    document.querySelectorAll('#globalSeg button').forEach(function(b){
+      var on = b.getAttribute('data-global') === 'true';
+      b.setAttribute('aria-pressed', String((on && n === scenes.length) || (!on && n === 0)));
+    });
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    if(b.hasAttribute('data-global')){
+      scenes.forEach(function(s){ s.setAttribute('data-lit', b.getAttribute('data-global')); render(s); });
+      syncGlobal();
+    } else if(b.hasAttribute('data-set')){
+      var sc = b.closest('.scene'); sc.setAttribute('data-lit', b.getAttribute('data-set')); render(sc); syncGlobal();
+    } else if(b.id === 'fogBtn'){
+      var s2 = b.closest('.scene'); s2.setAttribute('data-fog', String(s2.getAttribute('data-fog') !== 'true')); render(s2);
+    }
+  });
+  scenes.forEach(render); syncGlobal();
+})();
+</script>
+
+</body></html>
